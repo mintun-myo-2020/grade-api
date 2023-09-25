@@ -49,7 +49,6 @@ public class MongoGradeDB implements GradeDB {
     }
 
 
-
     @Override
     public Grade logGrade(String course, int grade) throws JSONException {
         OkHttpClient client = new OkHttpClient().newBuilder()
@@ -76,8 +75,7 @@ public class MongoGradeDB implements GradeDB {
             } else {
                 throw new RuntimeException(responseBody.getString("message"));
             }
-        }
-        catch (IOException | JSONException e) {
+        } catch (IOException | JSONException e) {
             throw new RuntimeException(e);
         }
     }
@@ -117,8 +115,7 @@ public class MongoGradeDB implements GradeDB {
             } else {
                 throw new RuntimeException(responseBody.getString("message"));
             }
-        }
-        catch (IOException | JSONException e) {
+        } catch (IOException | JSONException e) {
             throw new RuntimeException(e);
         }
     }
@@ -149,11 +146,11 @@ public class MongoGradeDB implements GradeDB {
             } else {
                 throw new RuntimeException(responseBody.getString("message"));
             }
-        }
-        catch (IOException | JSONException e) {
+        } catch (IOException | JSONException e) {
             throw new RuntimeException(e);
         }
     }
+
 
     @Override
     public void leaveTeam() throws JSONException {
@@ -179,8 +176,7 @@ public class MongoGradeDB implements GradeDB {
             } else {
                 throw new RuntimeException(responseBody.getString("message"));
             }
-        }
-        catch (IOException | JSONException e) {
+        } catch (IOException | JSONException e) {
             throw new RuntimeException(e);
         }
     }
@@ -189,7 +185,36 @@ public class MongoGradeDB implements GradeDB {
     // TODO: Implement this method
     //       Hint: Read apiDocuments/getMyTeam.md and refer to the above
     //             methods to help you write this code (copy-and-paste + edit as needed).
-    public Team getMyTeam() {
-        return null;
+    public Team getMyTeam() throws JSONException {
+        OkHttpClient httpClient = new OkHttpClient().newBuilder().build();
+        Request request = new Request.Builder()
+                .url("https://grade-logging-api.chenpan.ca/team")
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Authorization", API_TOKEN)
+                .build();
+        try {
+            Response response = httpClient.newCall(request).execute();
+            System.out.println(response);
+            JSONObject responseBody = new JSONObject(response.body().string());
+
+            if (responseBody.getInt("status_code") == 200) {
+                JSONObject teamObject = responseBody.getJSONObject("team");
+                JSONArray membersJSONArray = teamObject.getJSONArray("members");
+                String[] membersArray = new String[membersJSONArray.length()];
+                for (int i = 0; i < membersJSONArray.length(); i++) {
+                    try {
+                        membersArray[i] = membersJSONArray.getString(i);
+                    } catch (JSONException e) {
+                        // Handle any JSON exception that may occur
+                        e.printStackTrace();
+                    }
+                }
+                return new Team(teamObject.getString("name").toString(), membersArray);
+            } else {
+                throw new RuntimeException(responseBody.getString("message"));
+            }
+        } catch (IOException | JSONException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
